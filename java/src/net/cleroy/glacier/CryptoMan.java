@@ -12,6 +12,13 @@ import javax.crypto.spec.SecretKeySpec;
 
 import net.cleroy.glacier.archiving.Archive;
 
+/** utility class to encrypt or decrypt a stream, and return the SHA256 that
+ * Amazon Glacier really likes. The encryption/decryption is based on an key
+ * that is passed as a byte[]
+ * 
+ * @author claudianew
+ *
+ */
 public class CryptoMan {
 	
 	private static final char[] hexArray =
