@@ -92,6 +92,7 @@ public class Archiver {
 		return members;
 	}
 	
+
 	
 	public List<ArchiveMember> loadFromDb(Connection c) throws SQLException {
 		String sql = "SELECT p.path, p.id, m.filename, m.file_size, m.timest, m.sha256 " +
@@ -163,8 +164,8 @@ public class Archiver {
 		
 		for(String f : files) {
 			ArchiveMember m = filesToArchive.get(f);
-			if(m.fileSize > 350000000) 
-				continue; // for now skip files bigger than 270 Mb
+			if(m.fileSize > 2000*1000*1000) 
+				continue; // for now skip files bigger than 550 Mb
 			aSize = a.add(m);
 			if(aSize>sizeMax) {
 				if(aSize>biggestArchive) biggestArchive = aSize;
