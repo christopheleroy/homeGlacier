@@ -426,25 +426,30 @@ public class Archiver {
 			st.executeUpdate("DELETE FROM ARCHIVE_CONTENT WHERE ARCHIVE_ID IN (SELECT ID FROM ARCHIVE WHERE GLACIER_ID is NULL)");
 			c.commit();
 		}else{
-			int partId = Integer.parseInt(args[0]);
-			ArchConfig cfg = new ArchConfig();
-			for(PartitionConfig pcfg: cfg.getPartitionConfigs()) {
-				if(pcfg.getId() == partId) {
-					String   hn = pcfg.getHostname();
-					String root = pcfg.getRoot();
-					File r = new File(root);
-					if(r.exists() && r.isDirectory()) {
-						Archiver archiver = new Archiver(pcfg);
-						archiver.cycle(cfg, 200, 10000);
+			// crash early if not all args are numeric
+			for(int i = 0; i< args.length; i++) {
+				int partId = Integer.parseInt(args[i]);
+			}
+			for(int i = 0; i< args.length; i++) try {
+				int partId = Integer.parseInt(args[i]);
+			
+				ArchConfig cfg = new ArchConfig();
+				for(PartitionConfig pcfg: cfg.getPartitionConfigs()) {
+					if(pcfg.getId() == partId) {
+						String   hn = pcfg.getHostname();
+						String root = pcfg.getRoot();
+						File r = new File(root);
+						if(r.exists() && r.isDirectory()) {
+							Archiver archiver = new Archiver(pcfg);
+							archiver.cycle(cfg, 200, 10000);
+						}
 					}
 				}
+			}catch(Exception x) {
+				x.printStackTrace();
 			}
-			
 		}
 	
 	}
 	
-	
-	
-
 }
