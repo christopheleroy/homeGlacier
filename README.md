@@ -19,8 +19,10 @@ The sqllite database (a single binary file on your computer) contains the encryp
 Never lose the sqlite database!
 
 This is written in Java, using the Amazon provided AWS jars, a jar for sqllite. 
-I think that by default it will require an AES key of 32 bytes which is not supported by the regular Java distribution,
+I think that by default it will require an AES key of 32 bytes which is not supported by the regular JRE (Java Runtime Environment) distribution,
 so  you have install the Java Cryptograhy Extension (JCE) (which takes 2 minutes), or perhaps hack the code to go to 16 bytes (128 bits).
 See http://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html
+
+Note that you will have to install those JCE extensions at the JRE level, so you may have to do this on each computer/mobile device you want  to use - for each JRE or JRE upgrade you go through.
 
 
