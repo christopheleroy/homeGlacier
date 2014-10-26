@@ -2,6 +2,8 @@ homeGlacier
 ===========
 Home Glavier is my week-end project to leverage Glacier, Amazon Web Services (AWS) solution for archiving files, for my home back-up.
 Since this is in the cloud everything you archive is encrypted with AES (I use 32 bytes (256 bits) keys at the moment).
+Encryption is serious business, but optional. The default encryption key is hard coded, so configure your encryption key if you are as serious about this, or just set the encryption flag to false on the partitions you don't consider all that private.
+
 
 Home Glacier is designed with a family's data archive needs. Not terabytes, not huge files, but perhaps hundreds of files a week.
 AWS Glacier is great for archiving, but not very fast for retrieving. But AWS is relativily cheap on the gigabyte.
