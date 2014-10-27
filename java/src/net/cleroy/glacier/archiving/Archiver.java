@@ -25,6 +25,7 @@ import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.spec.SecretKeySpec;
 
+import net.cleroy.glacier.Options;
 import net.cleroy.glacier.config.ArchConfig;
 import net.cleroy.glacier.config.PartitionConfig;
 
@@ -62,10 +63,11 @@ public class Archiver {
 			ArchivePath ap = findPath(root, subRoot + "/" + subPath); 
 			
 			for(File f : listing) {
-				if(f.isDirectory() && 
-						! f.getName().equals(".") && 
+				if(f.isDirectory()) {
+					if(	! f.getName().equals(".") && 
 						! f.getName().equals("..")) {					
-					recurseCrawl(members, root, subRoot, subPath+"/" + f.getName());
+						recurseCrawl(members, root, subRoot, subPath+"/" + f.getName());
+					}
 				}else{
 					ArchiveMember m = new ArchiveMember();
 					m.path = ap;
@@ -151,6 +153,11 @@ public class Archiver {
 		long totalSize = 0L;
 		for(ArchiveMember m : filesToArchive.values()) { totalSize += m.fileSize; }
 		System.out.println("makeNewArchive: " + filesToArchive.size() + " files to be archived, totalling " + totalSize + " bytes.");
+		
+		if(filesToArchive.size() == 0) {
+			System.out.println("makeNewArchive: returning an empty list (to do nothing about it)");
+			return new ArrayList<Archive>();
+		}
 		
 		String[] files = filesToArchive.keySet().toArray(new String[0]);
 		Arrays.sort(files);
@@ -301,6 +308,7 @@ public class Archiver {
 						System.out.println("unable to Get Generated Id for PATHNAME " + p.path);
 					}
 				}
+				if(rs!=null) rs.close();
 			}
 			c.commit();
 		}
@@ -323,6 +331,7 @@ public class Archiver {
 			System.out.println("unable to Get Generated Id for ARCHIVE ");
 			
 		}
+		if(rs != null) rs.close();
 		
 		String sqlInsertContent = "INSERT into ARCHIVE_CONTENT(ARCHIVE_ID, PATH_ID, FILENAME, TIMEST, FILE_SIZE, SHA256)" +
 				" VALUES (" + archiveId + ", ?, ?, ?, ?, ?)";
@@ -370,14 +379,17 @@ public class Archiver {
 		System.out.println("** " + (tE-tA) + " ms to encrypt  (" + (tE-t0) + " ms to build+encrypt");
 		if(tU > tE) {
 			System.out.println("** " + (tU-tE) + " ms to upload");
-			System.out.println("** " + (tU-tS) + " ms to save status");
+			System.out.println("** " + (tS-tU) + " ms to save status");
 			System.out.println("** " + (tS-t0) +" ms overall, that is " + ( (tS-t0)/1000 ) + " seconds overall");
 		}
 		System.out.println("** ************************************************************** **");
 		
 	}
 	
-	public void cycle(ArchConfig archConf, int archiveMax, int megaBytesMax) throws Exception {
+	public void cycle(Options opts, ArchConfig archConf, int archiveMax, int megaBytesMax) throws Exception {
+		if(opts==null) {
+			opts = Options.byCommandLine();
+		}
 		long byteMax = (long)megaBytesMax * 1024L * 1024L;
 		long byteTotal = 0L;
 		int archiveNumber = 0;
@@ -396,9 +408,11 @@ public class Archiver {
 				String fzip = "c:/temp/glacier-" + arch.archiveId + ".zip";
 				String fbze = "c:/temp/glacier-" + arch.archiveId + ".bze";
 				long t0 = System.currentTimeMillis();
-				makeArchive(arch, fzip); System.out.println("Archive made: " + fzip);
+				makeArchive(arch, fzip); 
+				System.out.println("Archive made: " + fzip);
 				long tA = System.currentTimeMillis();
-				encryptArchiveAndGetSHA256(encKey, arch, fzip, fbze);System.out.println("Archive encrypted: " + fbze);
+				encryptArchiveAndGetSHA256(encKey, arch, fzip, fbze);
+				System.out.println("Archive encrypted: " + fbze);
 				long tE = System.currentTimeMillis();
 				if(ArchiveUploader.upload(archConf, this.config, arch, fbze)) {
 					long tU = System.currentTimeMillis();
@@ -410,6 +424,15 @@ public class Archiver {
 					timeReport(arch.getSize(), t0, tA, tE, tE, tE);
 				}
 				byteTotal += arch.getSize();
+				
+				List<File> toDelete = new ArrayList<File>();
+				if(!opts.keepZips()) { toDelete.add( new File(fzip) ); }
+				if(!opts.keepBZEs()) { toDelete.add( new File(fbze) ); }
+				for(File f: toDelete)  {
+					if(!f.delete())  {
+						System.err.println("Delete of " + f.getAbsolutePath() + " failed");
+					}
+				}
 			}
 		}
 		System.out.println("Stopping the archive process after " + archiveMax + " archives and/or " + byteTotal + " bytes archived.");
@@ -423,13 +446,15 @@ public class Archiver {
 			ArchConfig cfg = new ArchConfig();
 			Connection c = cfg.makeConnection();
 			Statement st = c.createStatement();
-			st.executeUpdate("DELETE FROM ARCHIVE_CONTENT WHERE ARCHIVE_ID IN (SELECT ID FROM ARCHIVE WHERE GLACIER_ID is NULL)");
+			int affected = st.executeUpdate("DELETE FROM ARCHIVE_CONTENT WHERE ARCHIVE_ID IN (SELECT ID FROM ARCHIVE WHERE GLACIER_ID is NULL)");
+			System.out.println("Clean-up: " + affected + " archive items cleaned-up");
 			c.commit();
 		}else{
 			// crash early if not all args are numeric
 			for(int i = 0; i< args.length; i++) {
 				int partId = Integer.parseInt(args[i]);
 			}
+			Options opts = Options.byCommandLine();
 			for(int i = 0; i< args.length; i++) try {
 				int partId = Integer.parseInt(args[i]);
 			
@@ -441,7 +466,7 @@ public class Archiver {
 						File r = new File(root);
 						if(r.exists() && r.isDirectory()) {
 							Archiver archiver = new Archiver(pcfg);
-							archiver.cycle(cfg, 200, 10000);
+							archiver.cycle(opts,cfg, 200, 10000);
 						}
 					}
 				}
