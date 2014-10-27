@@ -11,6 +11,7 @@ import net.cleroy.glacier.config.PartitionConfig;
 public class InitialDb {
 	
 	static public void main(String[] args) throws Exception {
+		
 		if(args.length == 0 ||
 				(! "freshen".equals(args[0]) &&
 				(args.length != 2 || !"build".equals(args[0])))) {
