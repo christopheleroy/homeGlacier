@@ -33,10 +33,8 @@ public class ArchConfig {
 	
 	public class PartConfig implements PartitionConfig {
 		private Properties props;
-		private String tag;
 		protected PartConfig(Properties p, String tag) {
 			props = extractProps(p, tag);
-			this.tag = tag;
 		}
 		@Override
 		public String getHostname() {
@@ -155,7 +153,9 @@ public class ArchConfig {
 	public ArchConfig() throws Exception {
 		
 			Properties prop = new Properties();
-		    InputStream in = ArchConfig.class.getResourceAsStream("ArchConfig.properties");
+			
+		    InputStream in = ArchConfig.class.getClassLoader().
+		    		getResourceAsStream("ArchConfig.properties");
 		    prop.load(in);
 		    in.close();
 		    
@@ -189,10 +189,14 @@ public class ArchConfig {
 		    }
 		    
 		    this.encryptionKey = encryptionKeyPer(key);		
-		    
-		    awsCredentials = new PropertiesCredentials(
-	                this.getClass()
-	                        .getResourceAsStream("ArchiveCredentials.properties"));
+		    try {
+			    awsCredentials = new PropertiesCredentials(
+		                this.getClass().getClassLoader().getSystemClassLoader()
+		                        .getResourceAsStream("ArchiveCredentials.properties"));
+		    }catch(Exception issue) {
+		    	issue.printStackTrace(System.err);
+		    	throw new RuntimeException("Unable to get AWS credentials (ArchiveCredentials.properties ought to be in your classpath)");
+		    }
 
 	}
 	
