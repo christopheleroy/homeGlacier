@@ -74,5 +74,17 @@ public class Archive {
 	 */
 	public int archiveSizeBytes() { return sizeBytes; }
 	
+	public String toString() {
+		long now = System.currentTimeMillis();
+		int earlierDays = (int) ((now  - this.earliestTimestamp ) / 86400000);
+		int latestDays = (int) ((now - this.latestTimestamp ) / 86400000);
+		String interval = (earlierDays == latestDays) ? latestDays + "days" : "[" + earlierDays + " ," + latestDays + "]days";
+		int mb = sizeBytes / (1024*1024);
+		int kb = sizeBytes / 1024;
+		
+		return "|" + this.glacierId.substring(0,15) +"..."  + "|{" + this.archiveId + "}" + interval +  
+				"=" + memberNumber + "files:" + (mb>7 ? mb + "MB" : kb + "kb");
+	}
+	
 	
 }
