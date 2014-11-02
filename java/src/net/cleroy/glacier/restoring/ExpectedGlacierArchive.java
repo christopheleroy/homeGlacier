@@ -9,7 +9,7 @@ import java.util.List;
 
 import net.cleroy.glacier.archiving.Archive;
 
-public class GlacierArchive {
+public class ExpectedGlacierArchive {
 	
 	protected Archive archive;
 	protected String salted;
@@ -22,14 +22,14 @@ public class GlacierArchive {
 	 * @return
 	 * @throws SQLException
 	 */
-	public static List<GlacierArchive> loadAllArchivesFromDb(Connection c, int configId) throws SQLException {
-		List<GlacierArchive> archs = new ArrayList<GlacierArchive>();
+	public static List<ExpectedGlacierArchive> loadAllArchivesFromDb(Connection c, int configId) throws SQLException {
+		List<ExpectedGlacierArchive> archs = new ArrayList<ExpectedGlacierArchive>();
 		
-		String sql = "SELECT a.Id, a.glacierId, a.sha256, a.salted, " +
+		String sql = "SELECT a.Id, a.glacier_Id, a.sha256, a.salted, " +
 		 " count(*), sum(m.file_size), min(m.timest), max(m.timest) " +
 		 "FROM ARCHIVE a join ARCHIVE_CONTENT m ON (m.ARCHIVE_ID = a.ID) " +
 		 "WHERE a.PARTITION_ID = " + configId +
-		 " GROUP BY a.Id, a.glacierId, a.sha256, a.salted " +
+		 " GROUP BY a.Id, a.glacier_Id, a.sha256, a.salted " +
 		 " ORDER BY a.Id asc";
 		
 		Statement stmt = c.createStatement();
@@ -39,7 +39,7 @@ public class GlacierArchive {
 					rs.getString(2), rs.getString(3),
 					rs.getInt(5), rs.getInt(6),
 					rs.getLong(7), rs.getLong(8));
-			GlacierArchive glarch = new GlacierArchive();
+			ExpectedGlacierArchive glarch = new ExpectedGlacierArchive();
 			glarch.archive = arch;
 			glarch.salted  = rs.getString(4);
 			archs.add(glarch);
