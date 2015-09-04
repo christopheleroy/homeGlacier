@@ -78,11 +78,13 @@ public class Archive {
 		long now = System.currentTimeMillis();
 		int earlierDays = (int) ((now  - this.earliestTimestamp ) / 86400000);
 		int latestDays = (int) ((now - this.latestTimestamp ) / 86400000);
-		String interval = (earlierDays == latestDays) ? latestDays + "days" : "[" + earlierDays + " ," + latestDays + "]days";
+		String interval = (earlierDays == latestDays) ? latestDays + "days" : "[" + earlierDays + " -- " + latestDays + "]days";
 		int mb = sizeBytes / (1024*1024);
 		int kb = sizeBytes / 1024;
+		String glacierId = this.glacierId == null ? "null" : this.glacierId;
+		glacierId = glacierId.length()>15 ? glacierId.substring(0,15) + "..." : glacierId;
 		
-		return "|" + this.glacierId.substring(0,15) +"..."  + "|{" + this.archiveId + "}" + interval +  
+		return "|" + glacierId  + "|{" + this.archiveId + "}" + interval +  
 				"=" + memberNumber + "files:" + (mb>7 ? mb + "MB" : kb + "kb");
 	}
 	
